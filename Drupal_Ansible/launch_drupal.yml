@@ -1,0 +1,56 @@
+---
+- name: start
+  hosts: localhost
+  vars:
+    url_stack: http://172.16.5.159/identity/v3
+    usuario: admin
+    contras: secret
+    proyect: admin
+  tasks:
+    - name: create a key
+      os_keypair:
+        name: llave
+        auth:
+          auth_url: "{{url_stack}}"
+          username: "{{usuario}}"
+          password: "{{contras}}"
+          project_name: "{{proyect}}"
+        state: present
+
+    - name: start 2
+      os_image:
+        auth:
+          auth_url: "{{url_stack}}"
+          username: "{{usuario}}"
+          password: "{{contras}}"
+          project_name: "{{proyect}}"
+        name: ubuntu Xenial
+        container_format: bare
+        disk_format: qcow2
+        state: present
+        filename: ./xenial-server-cloudimg-amd64-disk1.img
+        is_public: yes
+
+    - name: start 3
+      os_server:
+        auth:
+          auth_url: "{{url_stack}}"
+          username: "{{usuario}}"
+          password: "{{contras}}"
+          project_name: test
+        name: instance
+        image: ubuntu Xenial
+        flavor: 2
+        state: present
+        key_name: llave
+        auto_ip: yes
+- hosts: web-server
+  roles:
+    - mariadb
+
+- hosts: web-server
+  become: true #privilege escalation systems to allow a user to execute tasks as another
+  roles:
+    - php
+    - drupal
+    - nginx

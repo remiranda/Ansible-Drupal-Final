@@ -1,0 +1,69 @@
+---
+- name: install the latest Composer
+  shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer warn=False
+  args:
+    creates: /usr/local/bin/composer
+
+- name: install git
+  package: name=git state=latest
+
+- name: clone Drush repository #aplicación basada en shell de software de computadora utilizada para controlar, manipular y administrar sitios web de Drupal.
+  git:
+    repo: https://github.com/drush-ops/drush.git
+    version: "9.3.0"
+    dest: /opt/drush
+
+- name: install Drush dependencies with Composer
+  shell: composer install
+  args:
+    chdir: "/opt/drush"
+
+- name: create the Drush executable link
+  file:
+    src: /opt/drush/drush
+    dest: /usr/local/bin/drush
+    state: link
+
+- name: install mysql client
+  package: name=mysql-client state=present
+
+- name: create the Drupal install directory
+  file:
+    path: "/var/www/drupal"
+    state: directory
+
+- name: clone Drupal repository
+  git:
+    repo: http://git.drupal.org/project/drupal.git
+    version: 8.5.3
+    dest: "/var/www/drupal"
+
+- name: install Drupal dependencies with Composer
+  shell: composer install
+  args:
+    chdir: "/var/www/drupal"
+    creates: "/var/www/drupal/vendor/autoload.php"
+
+- name: install Drupal
+  shell: drush si -y --site-name= "My Drupal Site" --account-name= admin --account-pass=secret --db-url=mysql://drupal-data:secret@{{ hostvars['db-server']['ansible_default_ipv4']['address'] }}/drupal-user
+  args:
+    chdir: "/var/www/drupal"
+
+- name: set proper ownership
+  file:
+    path: "/var/www/drupal"
+    owner: www-data
+    group: www-data
+    recurse: yes
+
+- name: set permissions on the settings file
+  file:
+    path: "/var/www/drupal/sites/default/settings.php"
+    mode: 0744
+
+- name: set permissions on files direcotry
+  file:
+    path: "/var/www/drupal/sites/default/files"
+    mode: 0777
+    state: directory
+recurse: yes
