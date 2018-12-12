@@ -1,0 +1,25 @@
+# Main Apache Server
+web:
+  build: .
+  ports:
+    - "8000:80"
+  volumes:
+    - ./drupal:/var/www/html
+  links:
+    - mysql:mysql
+  #  - solr:solr
+  working_dir: /var/www/html
+  expose:
+    - "8000"
+
+# MySQL Server
+mysql:
+  image: mysql:5.7
+  environment:
+    MYSQL_USER: drupal
+    MYSQL_PASSWORD: 1234567890
+    MYSQL_DATABASE: drupal
+    MYSQL_ROOT_PASSWORD: ''
+    MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+  expose:
+    - "3306"
