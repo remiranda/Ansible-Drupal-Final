@@ -1,1 +1,1 @@
-# Drupal 8 with docker-compose
+# Drupal with docker-compose
